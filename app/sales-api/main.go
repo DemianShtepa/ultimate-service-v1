@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"errors"
 	_ "expvar"
 	"fmt"
@@ -9,6 +10,8 @@ import (
 	"net/http"
 	_ "net/http/pprof"
 	"os"
+	"os/signal"
+	"syscall"
 	"time"
 )
 
@@ -63,7 +66,37 @@ func run(logger *log.Logger) error {
 		}
 	}()
 
-	select {}
+	log.Println("run: Initialize api server")
+	shutdown := make(chan os.Signal, 1)
+	signal.Notify(shutdown, syscall.SIGINT, syscall.SIGTERM)
+
+	api := http.Server{
+		Addr:         config.Web.ApiHost,
+		ReadTimeout:  config.Web.ReadTimeout,
+		WriteTimeout: config.Web.WriteTimeout,
+	}
+
+	serverErrors := make(chan error, 1)
+	go func() {
+		log.Printf("run: Starting api server %s", config.Web.ApiHost)
+		serverErrors <- api.ListenAndServe()
+	}()
+
+	select {
+	case err := <-serverErrors:
+		return err
+	case sig := <-shutdown:
+		log.Printf("run: Starting shutdown - %v", sig)
+
+		ctx, cancel := context.WithTimeout(context.Background(), config.Web.ShutdownTimeout)
+		defer cancel()
+
+		if err := api.Shutdown(ctx); err != nil {
+			api.Close()
+
+			return err
+		}
+	}
 
 	return nil
 }
