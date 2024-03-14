@@ -13,6 +13,7 @@ import (
 	"os/signal"
 	"syscall"
 	"time"
+	"ultimate-service-v1/app/sales-api/handlers"
 )
 
 var build = "develop"
@@ -72,6 +73,7 @@ func run(logger *log.Logger) error {
 
 	api := http.Server{
 		Addr:         config.Web.ApiHost,
+		Handler:      handlers.API(),
 		ReadTimeout:  config.Web.ReadTimeout,
 		WriteTimeout: config.Web.WriteTimeout,
 	}
