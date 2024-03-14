@@ -50,37 +50,37 @@ func run(logger *log.Logger) error {
 		return err
 	}
 
-	log.Printf("run: Application started. Version %q", build)
-	defer log.Println("run: Completed")
+	logger.Printf("run: Application started. Version %q", build)
+	defer logger.Println("run: Completed")
 
 	out, err := conf.String(&config)
 	if err != nil {
 		return err
 	}
-	log.Printf("run: Config: \n%v\n", out)
+	logger.Printf("run: Config: \n%v\n", out)
 
-	log.Println("run: Initialize debugging support")
+	logger.Println("run: Initialize debugging support")
 	go func() {
-		log.Printf("run: Debug listening %s", config.Web.DebugHost)
+		logger.Printf("run: Debug listening %s", config.Web.DebugHost)
 		if err := http.ListenAndServe(config.Web.DebugHost, http.DefaultServeMux); err != nil {
-			log.Printf("run: Debug listener closed : %v", err)
+			logger.Printf("run: Debug listener closed : %v", err)
 		}
 	}()
 
-	log.Println("run: Initialize api server")
+	logger.Println("run: Initialize api server")
 	shutdown := make(chan os.Signal, 1)
 	signal.Notify(shutdown, syscall.SIGINT, syscall.SIGTERM)
 
 	api := http.Server{
 		Addr:         config.Web.ApiHost,
-		Handler:      handlers.API(),
+		Handler:      handlers.API(logger),
 		ReadTimeout:  config.Web.ReadTimeout,
 		WriteTimeout: config.Web.WriteTimeout,
 	}
 
 	serverErrors := make(chan error, 1)
 	go func() {
-		log.Printf("run: Starting api server %s", config.Web.ApiHost)
+		logger.Printf("run: Starting api server %s", config.Web.ApiHost)
 		serverErrors <- api.ListenAndServe()
 	}()
 
@@ -88,7 +88,7 @@ func run(logger *log.Logger) error {
 	case err := <-serverErrors:
 		return err
 	case sig := <-shutdown:
-		log.Printf("run: Starting shutdown - %v", sig)
+		logger.Printf("run: Starting shutdown - %v", sig)
 
 		ctx, cancel := context.WithTimeout(context.Background(), config.Web.ShutdownTimeout)
 		defer cancel()
