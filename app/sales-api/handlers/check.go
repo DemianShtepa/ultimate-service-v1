@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"context"
-	"encoding/json"
 	"log"
 	"net/http"
 	"ultimate-service-v1/foundation/web"
@@ -18,6 +17,6 @@ func readiness(logger *log.Logger) web.Handler {
 
 		logger.Printf("check: readiness called %v", status)
 
-		return json.NewEncoder(w).Encode(status)
+		return web.Respond(ctx, w, status, http.StatusOK)
 	}
 }

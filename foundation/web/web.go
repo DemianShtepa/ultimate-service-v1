@@ -15,8 +15,9 @@ type ctxKey int
 const KeyValues ctxKey = 1
 
 type Values struct {
-	TraceId string
-	Now     time.Time
+	TraceId    string
+	Now        time.Time
+	StatusCode int
 }
 
 type Handler func(ctx context.Context, w http.ResponseWriter, r *http.Request) error
