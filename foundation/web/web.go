@@ -22,14 +22,16 @@ type Values struct {
 type Handler func(ctx context.Context, w http.ResponseWriter, r *http.Request) error
 
 type App struct {
-	Mux      *http.ServeMux
-	shutdown chan os.Signal
+	Mux         *http.ServeMux
+	shutdown    chan os.Signal
+	middlewares []Middleware
 }
 
-func NewApp(shutdown chan os.Signal) *App {
+func NewApp(shutdown chan os.Signal, middlewares ...Middleware) *App {
 	return &App{
-		Mux:      http.NewServeMux(),
-		shutdown: shutdown,
+		Mux:         http.NewServeMux(),
+		shutdown:    shutdown,
+		middlewares: middlewares,
 	}
 }
 
@@ -41,7 +43,10 @@ func (a *App) Get(path string, handler Handler) {
 	a.handle("GET", path, handler)
 }
 
-func (a *App) handle(method string, path string, handler Handler) {
+func (a *App) handle(method string, path string, handler Handler, middlewares ...Middleware) {
+	handler = wrapMiddleware(middlewares, handler)
+	handler = wrapMiddleware(a.middlewares, handler)
+
 	a.Mux.HandleFunc(fmt.Sprintf("%s %s", method, path), func(w http.ResponseWriter, r *http.Request) {
 		values := Values{
 			TraceId: uuid.New().String(),
