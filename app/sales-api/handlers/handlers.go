@@ -1,14 +1,16 @@
 package handlers
 
 import (
-	"github.com/go-chi/chi/v5"
 	"log"
+	"net/http"
+	"os"
+	"ultimate-service-v1/foundation/web"
 )
 
-func API(logger *log.Logger) *chi.Mux {
-	handler := chi.NewMux()
+func API(logger *log.Logger, shutdown chan os.Signal) http.Handler {
+	webApp := web.NewApp(shutdown)
 
-	handler.Get("/ready", readiness(logger))
+	webApp.Get("/ready", readiness(logger))
 
-	return handler
+	return webApp.Mux
 }
