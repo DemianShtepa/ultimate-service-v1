@@ -46,6 +46,8 @@ func RespondError(ctx context.Context, w http.ResponseWriter, err error) error {
 		if err = Respond(ctx, w, errorResponse, rootErr.Status); err != nil {
 			return err
 		}
+
+		return nil
 	}
 
 	errorResponse := ErrorResponse{
