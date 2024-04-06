@@ -4,13 +4,14 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"ultimate-service-v1/core/middleware"
 	"ultimate-service-v1/foundation/web"
 )
 
 func API(logger *log.Logger, shutdown chan os.Signal) http.Handler {
-	webApp := web.NewApp(shutdown)
+	webApp := web.NewApp(shutdown, middleware.Logging(logger))
 
-	webApp.Get("/ready", readiness(logger))
+	webApp.Get("/ready", readiness())
 
 	return webApp.Mux
 }

@@ -51,7 +51,7 @@ func (a *App) handle(method string, path string, handler Handler, middlewares ..
 	a.Mux.HandleFunc(fmt.Sprintf("%s %s", method, path), func(w http.ResponseWriter, r *http.Request) {
 		values := Values{
 			TraceId: uuid.New().String(),
-			Now:     time.Time{},
+			Now:     time.Now(),
 		}
 		ctx := context.WithValue(r.Context(), KeyValues, &values)
 		if err := handler(ctx, w, r); err != nil {
