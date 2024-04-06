@@ -11,7 +11,7 @@ import (
 func Logging(logger *log.Logger) web.Middleware {
 	return func(handler web.Handler) web.Handler {
 		return func(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
-			values, ok := ctx.Value(web.KeyValues).(*web.Values)
+			values, ok := ctx.Value(web.CtxValues).(*web.Values)
 			if !ok {
 				return web.NewShutdown("web values missing from context")
 			}

@@ -8,7 +8,7 @@ import (
 )
 
 func Respond(ctx context.Context, w http.ResponseWriter, data any, statusCode int) error {
-	values, ok := ctx.Value(KeyValues).(*Values)
+	values, ok := ctx.Value(CtxValues).(*Values)
 	if !ok {
 		return NewShutdown("web values missing from context")
 	}

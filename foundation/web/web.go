@@ -12,7 +12,7 @@ import (
 
 type ctxKey int
 
-const KeyValues ctxKey = 1
+const CtxValues ctxKey = 1
 
 type Values struct {
 	TraceId    string
@@ -53,7 +53,7 @@ func (a *App) handle(method string, path string, handler Handler, middlewares ..
 			TraceId: uuid.New().String(),
 			Now:     time.Now(),
 		}
-		ctx := context.WithValue(r.Context(), KeyValues, &values)
+		ctx := context.WithValue(r.Context(), CtxValues, &values)
 		if err := handler(ctx, w, r); err != nil {
 			a.SignalShutdown()
 			return
