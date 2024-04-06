@@ -9,7 +9,7 @@ import (
 )
 
 func API(logger *log.Logger, shutdown chan os.Signal) http.Handler {
-	webApp := web.NewApp(shutdown, middleware.Logging(logger), middleware.Errors(logger))
+	webApp := web.NewApp(shutdown, middleware.Logging(logger), middleware.Errors(logger), middleware.Panics(logger))
 
 	webApp.Get("/ready", readiness())
 
