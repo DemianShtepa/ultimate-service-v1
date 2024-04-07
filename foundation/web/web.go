@@ -40,8 +40,8 @@ func (a *App) SignalShutdown() {
 	a.shutdown <- syscall.SIGTERM
 }
 
-func (a *App) Get(path string, handler Handler) {
-	a.handle("GET", path, handler)
+func (a *App) Get(path string, handler Handler, middlewares ...Middleware) {
+	a.handle("GET", path, handler, middlewares...)
 }
 
 func (a *App) handle(method string, path string, handler Handler, middlewares ...Middleware) {

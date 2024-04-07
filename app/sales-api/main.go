@@ -2,10 +2,12 @@ package main
 
 import (
 	"context"
+	"crypto/rsa"
 	"errors"
 	_ "expvar"
 	"fmt"
 	"github.com/ardanlabs/conf/v3"
+	"github.com/golang-jwt/jwt/v5"
 	"log"
 	"net/http"
 	_ "net/http/pprof"
@@ -14,6 +16,7 @@ import (
 	"syscall"
 	"time"
 	"ultimate-service-v1/app/sales-api/handlers"
+	"ultimate-service-v1/core/authentication"
 )
 
 var build = "develop"
@@ -34,6 +37,10 @@ func run(logger *log.Logger) error {
 			ReadTimeout     time.Duration `conf:"default:5s"`
 			WriteTimeout    time.Duration `conf:"default:5s"`
 			ShutdownTimeout time.Duration `conf:"default:5s"`
+		}
+		Auth struct {
+			KeyId   string `conf:"default:1b372655-7489-4417-b972-c9b58ad6899d"`
+			KeyPath string `conf:"default:/Users/demian/GolandProjects/ultimate-service-v1/private.pem"`
 		}
 	}{}
 	config.Version.Build = build
@@ -71,9 +78,21 @@ func run(logger *log.Logger) error {
 	shutdown := make(chan os.Signal, 1)
 	signal.Notify(shutdown, syscall.SIGINT, syscall.SIGTERM)
 
+	privateKeyFile, err := os.ReadFile(config.Auth.KeyPath)
+	if err != nil {
+		return err
+	}
+	privateKey, err := jwt.ParseRSAPrivateKeyFromPEM(privateKeyFile)
+	if err != nil {
+		return err
+	}
+	auth := authentication.NewAuthentication(map[string]*rsa.PrivateKey{
+		config.Auth.KeyId: privateKey,
+	})
+
 	api := http.Server{
 		Addr:         config.Web.ApiHost,
-		Handler:      handlers.API(logger, shutdown),
+		Handler:      handlers.API(logger, shutdown, auth),
 		ReadTimeout:  config.Web.ReadTimeout,
 		WriteTimeout: config.Web.WriteTimeout,
 	}
