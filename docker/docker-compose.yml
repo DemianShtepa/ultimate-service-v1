@@ -1,0 +1,22 @@
+version: "3.7"
+
+volumes:
+  postgres:
+
+services:
+  sales-api:
+    build:
+      context: ../
+      dockerfile: docker/go/Dockerfile
+    ports:
+      - "3000:3000"
+      - "4000:4000"
+
+  postgres:
+    image: postgres:13.4-alpine3.14
+    environment:
+      - POSTGRES_DB=sales-api
+      - POSTGRES_USER=user
+      - POSTGRES_PASSWORD=password
+    volumes:
+      - postgres:/var/lib/postgresql/data
