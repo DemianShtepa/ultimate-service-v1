@@ -17,6 +17,7 @@ import (
 	"time"
 	"ultimate-service-v1/app/sales-api/handlers"
 	"ultimate-service-v1/core/authentication"
+	"ultimate-service-v1/foundation/database"
 )
 
 var build = "develop"
@@ -38,9 +39,15 @@ func run(logger *log.Logger) error {
 			WriteTimeout    time.Duration `conf:"default:5s"`
 			ShutdownTimeout time.Duration `conf:"default:5s"`
 		}
+		DB struct {
+			Host     string `conf:"default:postgres:5432"`
+			User     string `conf:"default:user"`
+			Password string `conf:"default:password,noprint"`
+			Database string `conf:"default:sales-api"`
+		}
 		Auth struct {
 			KeyId   string `conf:"default:1b372655-7489-4417-b972-c9b58ad6899d"`
-			KeyPath string `conf:"default:/Users/demian/GolandProjects/ultimate-service-v1/private.pem"`
+			KeyPath string `conf:"default:/var/ultimate-service-v1/private.pem"`
 		}
 	}{}
 	config.Version.Build = build
@@ -89,10 +96,23 @@ func run(logger *log.Logger) error {
 	auth := authentication.NewAuthentication(map[string]*rsa.PrivateKey{
 		config.Auth.KeyId: privateKey,
 	})
+	db, err := database.Open(database.Config{
+		Host:     config.DB.Host,
+		User:     config.DB.User,
+		Password: config.DB.Password,
+		Database: config.DB.Database,
+	})
+	if err != nil {
+		return err
+	}
+	defer func() {
+		logger.Printf("run: Stopping DB %s", config.DB.Host)
+		db.Close()
+	}()
 
 	api := http.Server{
 		Addr:         config.Web.ApiHost,
-		Handler:      handlers.API(logger, shutdown, auth),
+		Handler:      handlers.API(logger, shutdown, auth, db),
 		ReadTimeout:  config.Web.ReadTimeout,
 		WriteTimeout: config.Web.WriteTimeout,
 	}

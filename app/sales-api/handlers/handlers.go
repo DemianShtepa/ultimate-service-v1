@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"github.com/jmoiron/sqlx"
 	"log"
 	"net/http"
 	"os"
@@ -9,7 +10,7 @@ import (
 	"ultimate-service-v1/foundation/web"
 )
 
-func API(logger *log.Logger, shutdown chan os.Signal, auth *authentication.Authentication) http.Handler {
+func API(logger *log.Logger, shutdown chan os.Signal, auth *authentication.Authentication, db *sqlx.DB) http.Handler {
 	webApp := web.NewApp(
 		shutdown,
 		middleware.Logging(logger),
@@ -18,7 +19,7 @@ func API(logger *log.Logger, shutdown chan os.Signal, auth *authentication.Authe
 		middleware.Panics(logger),
 	)
 
-	webApp.Get("/ready", readiness(), middleware.Authenticate(auth), middleware.Authorize(auth, authentication.RoleAdmin))
+	webApp.Get("/ready", readiness(db), middleware.Authenticate(auth), middleware.Authorize(auth, authentication.RoleAdmin))
 
 	return webApp.Mux
 }

@@ -17,6 +17,7 @@ type Config struct {
 func Open(config Config) (*sqlx.DB, error) {
 	query := make(url.Values)
 	query.Set("timezone", "utc")
+	query.Set("sslmode", "disable")
 
 	u := url.URL{
 		Scheme:   "postgres",
